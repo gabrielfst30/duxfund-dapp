@@ -2,7 +2,7 @@
 import Image from "next/image";
 import styles from "./styles.module.scss";
 import { useState, useEffect } from 'react'
-import { isInstalled, getAddress } from "@gemwallet/api";
+import { isInstalled, getAddress, GetAddressResponse } from "@gemwallet/api";
 
 
 export function Navbar() {
@@ -13,34 +13,42 @@ export function Navbar() {
   const [name, setName] = useState("Victor")
   const [error, setError] = useState('')
 
-  const handleConnectWallet = async () => {
-    setError("");
-    setIsConnecting(true);
+  const connectWallet = async () => {
+    setError(""); // setando o erro como vazio
+    setIsConnecting(true); // iniciando o loading de conexão
     try {
-      const installed = await isInstalled();
+      const installed = await isInstalled(); // chama a função para verificar se a GemWallet está instalada
+      console.log("GemWallet installed:", installed); // log para debug
+      // Verifica se a GemWallet está instalada
       if (!installed) {
         setError("GemWallet is not installed")
         setIsConnecting(false);
         return;
       }
-      const addressResponse = await getAddress();
-      if (addressResponse && addressResponse.address) {
-        setAccount(addressResponse.address);
+      const addressResponse: any = await getAddress(); // chama a função para obter o endereço
+      console.log("Address esta retornando?: ", addressResponse); // log para debug
+      // Verifica se o endereço foi obtido com sucesso
+      if (addressResponse) {
+        setAccount(addressResponse.result.address); // Salva o endereço real!)
       } else {
-        setError("Failed to get address from GemWallet")
+        setError("address failure")
       }
+      
     } catch (err) {
       setError("Failed to connect to GemWallet");
     }
+    
     setIsConnecting(false);
   };
 
+  console.log("endereco salvo: ", account);
 
 
 
 
 
-// Função para criar um novo payload (request) de login
+
+  // Função para criar um novo payload (request) de login
   // const createSignInPayload = async () => {
   //   try {
   //     setIsConnecting(true)
@@ -60,10 +68,10 @@ export function Navbar() {
   //     const data = await response.json()
   //     setPayloadUuid(data.uuid) // Setando UUID do payload (assinatura)
   //     setConnectUrl(data.connectUrl) // URL para conectar
-      
+
   //     // Abrir a URL da Xaman para conexão
   //     window.open(data.connectUrl, '_blank') // Abrir a URL da Xaman
-      
+
   //     // Iniciar polling (envia o uuid gerado)
   //     startPolling(data.uuid)
   //   } catch (error) {
@@ -91,7 +99,7 @@ export function Navbar() {
   //       }
 
   //       const data = await response.json()
-        
+
   //       //response
   //       if (data.resolved) {
   //         // Usuário autenticou com sucesso
@@ -157,11 +165,10 @@ export function Navbar() {
           {isConnecting ? (
             <p>Conectando...</p>
           ) : account ? (
-            <p>Conectado: {account.slice(0, 6)}...{account.slice(-4)}</p>
+            <p>Conectado: {account.slice(0, 6)}...{account.slice(-4)}</p> // Mostra o início e o fim do endereço
           ) : (
-            <button onClick={handleConnectWallet}>Connect Wallet</button>
+            <button className={styles.connect} onClick={connectWallet}>Connect Wallet</button>
           )}
-            {error && <div style={{ color: "red" }}>{error}</div>}
         </div>
       </div>
     </div>
