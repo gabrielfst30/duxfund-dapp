@@ -1,5 +1,6 @@
 // src/app/api/xumm_wallet/route.ts
 
+import { xumm } from '@/services/xumm/xummClient';
 import { NextResponse, NextRequest } from 'next/server';
 import { XummSdk } from 'xumm-sdk';
 
@@ -24,18 +25,15 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // 2) Instanciar o SDK dentro do handler para garantir que as env vars já estejam carregadas
-  const sdk = new XummSdk(apiKey, apiSecret);
-
-  // 3) Tentar ler o body como JSON; se falhar, assume objeto vazio
+  // 2) Req Body
   const { uuid } = (await request.json().catch(() => ({}))) as {
     uuid?: string;
   };
 
-  // 4) Se vier `uuid`, executa polling do payload
+  // 3) Se vier `uuid`, executa a verificação do status da conexão do payload
   if (uuid) {
     // 4.a) Buscar o payload existente pelo UUID
-    const payload = await sdk.payload.get(uuid);
+    const payload = await xumm.payload.get(uuid);
 
     // 4.b) Se payload não existir, retornar 404
     if (!payload) {
@@ -46,6 +44,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 4.c) Retornar o estado atual do payload
+    // Se a conexão for aprovada pego o response da conexão
     return NextResponse.json({
       uuid,
       resolved: payload.meta.resolved,
@@ -55,7 +54,7 @@ export async function POST(request: NextRequest) {
   }
 
   // 5) Caso não venha UUID: criar um novo payload de SignIn
-  const created = await sdk.payload.create(
+  const created = await xumm.payload.create(
     { txjson: { TransactionType: 'SignIn' } },
     true // `true` garante retorno de `next.always` (deep‐link / QR)
   );

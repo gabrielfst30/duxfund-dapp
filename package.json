@@ -16,8 +16,9 @@
     "next": "15.3.5",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "xumm-sdk": "^1.11.2",
-    "xrpl": "^4.3.0"
+    "xrpl": "^4.3.0",
+    "xumm": "^1.8.0",
+    "xumm-sdk": "^1.11.2"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

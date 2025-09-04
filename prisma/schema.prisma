@@ -16,7 +16,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Transactions {
+model Payments {
   id                  Int      @id @default(autoincrement())
   hash                String   @unique @db.Char(64) // hash único da transação
   ledger_index        Int // número do bloco/ledger onde a transação foi incluída
@@ -31,20 +31,21 @@ model Transactions {
   // Relacionamento com NFTs (opcional)
   nfts NftMints[]
 
-  @@map("transactions")
+  @@map("payments")
 }
 
 model NftMints {
-  id               Int    @id @default(autoincrement())
-  nft_hash         String @unique @db.Char(64) // hash único do nft
-  transaction_hash String // FK para Transactions
-  type             String @db.VarChar(20) // tipo da transação (Payment, NFTokenMint, etc.)
+  id               Int      @id @default(autoincrement())
+  tx_hash     String   @db.Char(64) // hash da transação de mint
+  nft_hash         String   @unique @db.Char(64) // hash único do nft
+  payment_hash String // FK para Transactions
+  type             String   @db.VarChar(20) // tipo da transação (Payment, NFTokenMint, etc.)
   uri              String // URI do NFT (hexadecimal)
   taxon            Int // taxon do NFT
-  created_at DateTime @default(now()) // horário de inserção
+  created_at       DateTime @default(now()) // horário de inserção
 
   // Relacionamento com Transactions
-  transaction Transactions @relation(fields: [transaction_hash], references: [hash])
+  payments Payments @relation(fields: [payment_hash], references: [hash])
 
   @@map("nft_mints")
 }

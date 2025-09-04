@@ -71,7 +71,7 @@ export async function POST() {
     client.disconnect()
 
     // 1) Cria a transação
-    const transaction = await prismaClient.transactions.create({
+    const transaction = await prismaClient.payments.create({
         data: {
             hash: txResult.result.hash,
             ledger_index: Number(txResult.result.ledger_index),
@@ -91,11 +91,14 @@ export async function POST() {
     // 2) Cria o NFT relacionado à transação
     const nft = await prismaClient.nftMints.create({
         data: {
-            nft_hash: mintResult.result.hash,
+            nft_hash: String(mintResult.result.tx_json.NFTokenID),
+            tx_hash: mintResult.result.hash,
+            payment_hash: transaction.hash,
             type: mintResult.result.tx_json.TransactionType,
             uri: uriHex,
             taxon: Number(mintResult.result.tx_json.NFTokenTaxon),
-            transaction_hash: transaction.hash,
+           
+            
         },
     });
 

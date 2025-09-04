@@ -1,58 +1,136 @@
+"use client"
+
 import { useState } from "react";
 import styles from "./styles.module.scss";
 
-interface ContributeProps {
-  onSend: (amount: number) => void;
-}
-
-export function Contribute({ onSend }: ContributeProps) {
-  const [amountRaw, setAmountRaw] = useState(""); // só dígitos
+export function Contribute() {
+  const [amount, setAmount] = useState(""); // só dígitos
+  const [mintLink, setMintLink] = useState(""); // guardando link do qrcode
 
   // Número mínimo permitido
   const MIN_VALUE = 0.000001;
 
-  // Formata o valor para string com vírgula antes das casas decimais (6 casas)
-  const formatAmount = (value: string) => {
-    if (value.length === 0) return "";
-    if (value.length <= 6) {
-      // ex: "543" vira "0,000543", "54" vira "0,000054"
-      return "0." + value.padStart(6, "0");
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    // Remove tudo que não for número
+    const rawValue = event.target.value.replace(/\D/g, '');
+
+    // Converte para número e divide por 1 milhão para ter 6 casas
+    const numberValue = Number(rawValue) / 1_000_000;
+
+    // Formata com 6 casas decimais fixas
+    const formattedValue = numberValue.toFixed(6);
+
+    setAmount(formattedValue);
+  };
+
+  // Enviando contribution
+  const handleSendContribution = async () => {
+    if (amount.length === 0) {
+      alert(`Insira um valor para contribuir`);
+      return;
     }
-    const integerPart = value.slice(0, -6);
-    const decimalPart = value.slice(-6);
-    return `${parseInt(integerPart, 10)},${decimalPart}`;
-  };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let val = e.target.value;
-
-    // Remove tudo que não for dígito ou vírgula
-    val = val.replace(/[^0-9,]/g, "");
-
-    // Remove vírgula para ficar só dígitos no raw
-    const digitsOnly = val.replace(/,/g, "");
-
-    setAmountRaw(digitsOnly);
-  };
-
-  const handleSend = () => {
-    if (amountRaw.length === 0) return;
-
-    // transforma para número com ponto decimal (6 casas)
-    const valueStr =
-      amountRaw.length <= 6
-        ? "0." + amountRaw.padStart(6, "0")
-        : amountRaw.slice(0, -6) + "." + amountRaw.slice(-6);
-
-    const value = parseFloat(valueStr);
-
-    if (isNaN(value) || value < MIN_VALUE) {
+    // validando valor mínimo de envio
+    if (Number(amount) < MIN_VALUE) {
       alert(`Valor mínimo permitido é ${MIN_VALUE}`);
       return;
     }
 
-    onSend(value);
-    setAmountRaw("");
+    try {
+      // enviando requisição para send_contribution
+      const sendContributionPaymentResponse = await fetch('/api/payment_payload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount: amount
+        }),
+      });
+
+      // pegando o response da send_contribution
+      const contributionData = await sendContributionPaymentResponse.json();
+
+      const { uuid, next } = contributionData;
+
+      if (!uuid || !next) {
+        throw new Error("Payload inválido");
+      }
+
+      console.log('Contribution response:', contributionData);
+
+      // abrindo o deep link para a carteira
+      window.open(contributionData.next, "_blank");
+
+      // armazenando uuid
+      const contributionId = contributionData.uuid
+
+      console.log('Contribution UUID:', contributionId)
+
+      // Começa o polling para verificar assinatura da tx
+      const checkPaymentSignature = async () => {
+        const res = await fetch('/api/check_payment_signature', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ uuid: contributionId }),
+        });
+
+        const checkPaymentSignatureResult = await res.json();
+
+        // Se a assinatura da transação estiver concluída
+        if (checkPaymentSignatureResult?.resolved) {
+          clearInterval(pollingTxInterval); // para o polling
+          alert("Contribuição confirmada! Clique em 'Assinar NFT' para assinar seu NFT! 🚀");
+          console.log("Dados da transação:", checkPaymentSignatureResult.tx);
+
+          // Faça o mint do nft
+          const mintRes = await fetch('/api/nft_payload', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ account: checkPaymentSignatureResult.account, txHash: checkPaymentSignatureResult.tx.hash }),
+          });
+          const { mintUuid, mintNext } = await mintRes.json();
+
+          // Salva o link do mint pra exibir no botão
+          setMintLink(mintNext);
+          console.log("mintLink state atualizado:", mintLink);
+
+          // Cheque de o NFT foi assinado pelo usuário
+          const checkNftSignature = async () => {
+            const res = await fetch('/api/check_nft_signature', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ mintUuid: mintUuid, paymentHash: checkPaymentSignatureResult.tx.hash }),
+            });
+
+            const checkNftSignatureResult = await res.json();
+
+            // Para quando tiver um retorno do res.json()
+            if (checkNftSignatureResult.resolved) {
+              clearInterval(pollingNftInterval);
+              alert('🎉 NFT cunhado na sua wallet!');
+              setAmount("");
+            }
+            setAmount("");
+          }
+          // Polling do nft a cada 5 segundos
+          const pollingNftInterval = setInterval(checkNftSignature, 5000);
+
+        }
+      };
+
+      // Polling da tx cada 5 segundos
+      const pollingTxInterval = setInterval(checkPaymentSignature, 5000);
+
+      // zerando amount
+      setAmount("");
+
+    } catch (error) {
+      console.error('Erro ao enviar contribuição:', error);
+      alert('Erro ao enviar contribuição. Tente novamente.');
+    }
   };
 
   return (
@@ -69,13 +147,20 @@ export function Contribute({ onSend }: ContributeProps) {
           type="text"
           placeholder="0.000001"
           className={styles.amountInput}
-          value={formatAmount(amountRaw)}
+          value={amount}
           onChange={handleChange}
         />
       </div>
 
       <div className={styles.buttonWrapper}>
-        <button onClick={handleSend}>Send Contribution</button>
+        <button onClick={handleSendContribution}>Send Contribution</button>
+      </div>
+
+      <div>
+        <p>Clique abaixo para assinar o NFT na Xumm Wallet:</p>
+        <button className={styles.mintButton} onClick={() => window.open(mintLink, '_blank')} disabled={!mintLink}>
+          Assinar NFT
+        </button>
       </div>
     </div>
   );

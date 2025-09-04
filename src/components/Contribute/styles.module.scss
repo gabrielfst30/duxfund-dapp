@@ -1,8 +1,10 @@
+@use "../../styles/variables.scss" as *;
+
 .Contribute {
   background-color: #121212;
   font-family: Space Grotesk;
   width: 662px;
-  height: 236px;
+  height: min-content;
   border-radius: 12px;
   padding: 20px 16px;
   color: #fff;
@@ -43,7 +45,8 @@
     font-size: 14px;
     box-sizing: border-box;
     margin-bottom: 0;
-    margin-top: 8px; /* Aqui está o espaçamento acima do input */
+    margin-top: 8px;
+    /* Aqui está o espaçamento acima do input */
 
     // Remove setinhas no Chrome, Safari, Edge
     &::-webkit-inner-spin-button,
@@ -63,5 +66,41 @@
     font-weight: 700;
     color: #000;
     cursor: pointer;
+  }
+
+
+  .mintButton {
+    background-color: $success !important;
+    color: white;
+  }
+
+  .mintButton:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+
+  .status {
+    margin-top: 12px;
+    padding: 12px;
+    border-radius: 6px;
+    background-color: #222;
+    border: 1px solid #333;
+
+    p {
+      margin: 4px 0;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .success {
+      color: #4CAF50;
+      font-weight: 600;
+    }
+
+    .error {
+      color: #f44336;
+      font-weight: 600;
+    }
   }
 }
