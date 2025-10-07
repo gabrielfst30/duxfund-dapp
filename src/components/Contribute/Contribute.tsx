@@ -112,8 +112,11 @@ export function Contribute() {
               clearInterval(pollingNftInterval);
               alert('🎉 NFT cunhado na sua wallet!');
               setAmount("");
+              setMintLink(""); // Limpa o link do mint
+              
+              // Recarrega a página para atualizar os dados
+              window.location.reload();
             }
-            setAmount("");
           }
           // Polling do nft a cada 5 segundos
           const pollingNftInterval = setInterval(checkNftSignature, 5000);
@@ -159,7 +162,7 @@ export function Contribute() {
       <div>
         <p>Clique abaixo para assinar o NFT na Xumm Wallet:</p>
         <button className={styles.mintButton} onClick={() => window.open(mintLink, '_blank')} disabled={!mintLink}>
-          Assinar NFT
+          Sign NFT
         </button>
       </div>
     </div>
