@@ -1,12 +1,15 @@
+@use "../../styles/variables.scss" as *;
+
 .Lastest {
   width: 650px;
   height: 695px;
   max-width: 960px;
   padding: 20px;
   border-radius: 12px;
-  color: #ffffff;
+  color: $color-text-white;
   display: flex;
   flex-direction: column;
+
 
   h1 {
     font-size: 22px;
@@ -32,7 +35,7 @@
     }
 
     &::-webkit-scrollbar-track {
-      background: #1e1e1e;
+      background: $card-background;
       border-radius: 8px;
     }
 
@@ -52,7 +55,7 @@
     min-height: 70px;
     padding: 8px 16px;
     border-radius: 12px;
-    background-color: #1e1e1e;
+    background-color: $card-background;
     opacity: 1;
     transform: rotate(0deg);
     display: flex;
@@ -66,15 +69,26 @@
     flex-direction: column;
   }
 
+  .nftLink {
+    text-decoration: none;
+    color: inherit;
+
+    &:hover {
+      text-decoration: underline;
+      opacity: 0.8;
+    }
+  }
+
   .nft {
-    font-size: 14px;
     font-family: monospace;
+    font-size: 0.9em;
+    color: $color-text-white;
     word-break: break-word;
   }
 
   .time {
     font-size: 12px;
-    color: #aaa;
+    color: $color-subtitle;
   }
 
   .right {
