@@ -1,3 +1,5 @@
+@use "../../styles/variables.scss" as *;
+
 .ProjectDetails {
   width: 662px;
   height: 208px;
@@ -6,9 +8,8 @@
   padding-right: 16px;
   border-radius: 12px;
   gap: 20px;
-
-  background-color: #121212;
-  color: #ffffff;
+  background: $card-background;
+  color: $color-text-white;
 
   display: flex;
   flex-direction: column;
@@ -33,14 +34,14 @@
       font-weight: 500;
       line-height: 21px;
       letter-spacing: 0px;
-      color: #ababab;
+      color: $color-subtitle;
       margin: 0;
     }
   }
 
   .text {
     p {
-      color: #ffffff;
+      color: $color-text-white;
       font-weight: 400;
       font-size: 14px;
       line-height: 20px;

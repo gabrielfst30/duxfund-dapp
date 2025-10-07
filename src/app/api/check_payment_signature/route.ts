@@ -30,7 +30,6 @@ export async function POST(req: NextRequest) {
         // Conectar à XRPL se ainda não estiver
         if (!client.isConnected()) await client.connect();
 
-
         // Criando request para a XRPL
         const xrplResult = await client.request({
             command: "tx",
@@ -44,6 +43,24 @@ export async function POST(req: NextRequest) {
 
         console.log("XRPL RESULT:", xrplResult)
 
+        // Função para converter drops para XRP
+        const dropsToXrp = (drops: string | number) => {
+            const numDrops = typeof drops === 'string' ? parseInt(drops) : drops;
+            return (numDrops / 1_000_000).toFixed(6);
+        };
+
+        // Extraindo o delivered_amount da resposta da XRPL
+        let deliveredAmountInDrops = null;
+        if (typeof xrplResult.result.meta === "object" && xrplResult.result.meta !== null && "delivered_amount" in xrplResult.result.meta) {
+            deliveredAmountInDrops = (xrplResult.result.meta as any).delivered_amount;
+        }
+
+        // Convertendo drops para XRP antes de salvar
+        const deliveredAmountInXrp = deliveredAmountInDrops ? dropsToXrp(deliveredAmountInDrops) : "0.000000";
+
+        console.log("Delivered amount in drops:", deliveredAmountInDrops);
+        console.log("Delivered amount in XRP:", deliveredAmountInXrp);
+
         // Pegando dados do request e salvando no banco
         const txResult = await prismaClient.payments.create({
             data: {
@@ -51,9 +68,7 @@ export async function POST(req: NextRequest) {
                 ledger_index: Number(xrplResult.result.ledger_index),
                 type: xrplResult.result.tx_json.TransactionType,
                 account: xrplResult.result.tx_json.Account,
-                delivered_amount: typeof xrplResult.result.meta === "object" && xrplResult.result.meta !== null && "delivered_amount" in xrplResult.result.meta
-                    ? (xrplResult.result.meta as any).delivered_amount
-                    : null,
+                delivered_amount: deliveredAmountInXrp, // Salvando em XRP
                 account_destination: typeof xrplResult.result.tx_json.Destination === "string"
                     ? xrplResult.result.tx_json.Destination
                     : "",

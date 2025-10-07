@@ -1,4 +1,3 @@
-
 import styles from "./styles.module.scss";
 import { useState, useEffect } from "react";
 
@@ -11,12 +10,21 @@ interface Contribution {
   uri: string;
   taxon: number;
   created_at: string;
+  payments: {
+    delivered_amount: string;
+  };
 }
 
 export function LatestContributions() {
   const [contributions, setContributions] = useState<Contribution[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Função para formatar o valor com 6 casas decimais
+  const formatXRP = (amount: string) => {
+    const numAmount = parseFloat(amount);
+    return numAmount.toFixed(6);
+  };
 
   const getContributions = async () => {
     try {
@@ -47,7 +55,6 @@ export function LatestContributions() {
       setLoading(false);
     }
   }
-
 
   console.log(contributions)
 
@@ -86,12 +93,21 @@ export function LatestContributions() {
               <div className={styles.card} key={index}>
                 <div className={styles.left}>
                   {/* <span className={styles.address}>Payment Tx: {contribution.payment_hash}</span> */}
-                  <span className={styles.nft}>{contribution.nft_hash}</span>
+                  <a 
+                    href={`https://testnet.xrpl.org/nft/${contribution.nft_hash}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={styles.nftLink}
+                  >
+                    <span className={styles.nft}>
+                      {contribution.nft_hash.slice(0, 8)}...{contribution.nft_hash.slice(-8)}
+                    </span>
+                  </a>
                   <span className={styles.time}>
                     {contribution.created_at}
                   </span>
                 </div>
-                <div className={styles.right}>{} XRP</div>
+                <div className={styles.right}>{formatXRP(contribution.payments.delivered_amount)} XRP</div>
               </div>
             );
           })

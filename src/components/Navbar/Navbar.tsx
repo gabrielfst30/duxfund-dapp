@@ -117,7 +117,7 @@ export function Navbar() {
             height={40}
             className={styles.logoImage}
           />
-          DuxFund
+          <p>DuxFund</p>
         </h1>
       </div>
 
