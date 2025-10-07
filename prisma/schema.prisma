@@ -35,14 +35,14 @@ model Payments {
 }
 
 model NftMints {
-  id               Int      @id @default(autoincrement())
-  tx_hash     String   @db.Char(64) // hash da transação de mint
-  nft_hash         String   @unique @db.Char(64) // hash único do nft
+  id           Int      @id @default(autoincrement())
+  tx_hash      String   @db.Char(64) // hash da transação de mint
+  nft_hash     String   @unique @db.Char(64) // hash único do nft
   payment_hash String // FK para Transactions
-  type             String   @db.VarChar(20) // tipo da transação (Payment, NFTokenMint, etc.)
-  uri              String // URI do NFT (hexadecimal)
-  taxon            Int // taxon do NFT
-  created_at       DateTime @default(now()) // horário de inserção
+  type         String   @db.VarChar(20) // tipo da transação (Payment, NFTokenMint, etc.)
+  uri          String // URI do NFT (hexadecimal)
+  taxon        Int // taxon do NFT
+  created_at   DateTime @default(now()) // horário de inserção
 
   // Relacionamento com Transactions
   payments Payments @relation(fields: [payment_hash], references: [hash])
